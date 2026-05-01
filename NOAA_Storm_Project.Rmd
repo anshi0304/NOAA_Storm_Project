@@ -1,0 +1,472 @@
+---
+title: "Analysis of NOAA Storm Events"
+author: "Anshika Sharma"
+date: "2026-05-01"
+output:
+  html_document:
+    toc: true
+    toc_float: true
+    toc_depth: 3
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(dplyr)
+library(readr)
+library(lubridate)
+library(ggplot2)
+```
+
+## Synopsis
+
+This report analyzes severe weather events in the United States using the 2025 NOAA Storm Events database. The purpose of this project is to understand which storm events caused the greatest population health impact, where different event types occurred most often, and how storm events changed by month. I used three raw NOAA files: the details file, the fatalities file, and the locations file. These files were joined together using the `EVENT_ID` variable because it connects the same storm event across the different datasets. To measure population health impact, I combined direct and indirect deaths with direct and indirect injuries. I also created a cleaned dataset with one row per storm event to reduce double-counting after joining the files. The results are presented through tables and figures so the patterns are easier to understand. This report is written as if it could be used by someone who wants to better understand storm risks and prepare for severe weather events.
+
+## Purpose and Audience
+
+The purpose of this report is to explore the 2025 NOAA Storm Events data and identify patterns in severe weather events across the United States. The report is written for a government or municipal manager who may need to understand storm risks and prepare for severe weather events. It does not make specific recommendations, but it summarizes patterns that could help with planning, preparedness discussions, and resource prioritization.
+
+## Project Folder Structure
+
+This project uses the raw NOAA Storm Events CSV files and creates one joined dataset for analysis. Keeping all files in one project folder makes the work easier to reproduce because the code can load the files from the same location each time.
+
+The project folder contains the following files:
+
+- `NOAA_Storm_Project.Rmd`: the R Markdown report with the code, explanations, tables, and figures.
+- `NOAA_Storm_Project.Rproj`: the RStudio project file.
+- `StormEvents_details-ftp_v1.0_d2025_c20260323.csv`: the raw NOAA details file.
+- `StormEvents_fatalities-ftp_v1.0_d2025_c20260323.csv`: the raw NOAA fatalities file.
+- `StormEvents_locations-ftp_v1.0_d2025_c20260323.csv`: the raw NOAA locations file.
+- `StormEvents_joined_data.csv`: the joined dataset created from the three raw files.
+- `NOAA_Storm_Project.html`: the knitted HTML report created from the R Markdown file.
+
+The raw CSV files were not edited outside of R. This helps make the project reproducible because another person can download the same files, place them in the same project folder, run the R Markdown file, and recreate the joined dataset and results.
+
+## Reproducibility Notes
+
+To reproduce this analysis, another user should download the same three 2025 NOAA Storm Events CSV files and place them in the same project folder. The R Markdown file loads the raw CSV files, joins them by `EVENT_ID`, creates the cleaned dataset, and produces the tables and figures. No data was manually edited outside of R. This helps make the results reproducible from the original raw data.
+
+## Data Processing
+
+The data for this project comes from the NOAA Storm Events database. I used the 2025 storm details, fatalities, and locations files. The NOAA Storm Events CSV file page was used to download the 2025 details, fatalities, and locations files. The NOAA Storm Events documentation and bulk CSV format documentation were used to understand how the files are structured and how variables such as `EVENT_ID`, `EVENT_TYPE`, injuries, deaths, and damage fields are defined.
+
+The details file contains the main information about each storm event, such as the event type, state, date, deaths, injuries, and damage information. The fatalities file contains additional information about deaths connected to storm events. The locations file contains geographic information about where events occurred. These files were joined together by the `EVENT_ID` variable because this variable connects the same storm event across the different files.
+
+To make the workflow easier to follow, I used the following pipeline:
+
+1. Download the three raw NOAA CSV files for 2025.
+2. Save all three files in the same project folder.
+3. Load the required R libraries.
+4. Define the folder path and file paths for each CSV file.
+5. Read the details, fatalities, and locations files into R.
+6. Join the three files using the `EVENT_ID` variable.
+7. Save the joined dataset as `StormEvents_joined_data.csv`.
+8. Create cleaned variables needed for the analysis.
+9. Use the cleaned dataset to answer the project questions with tables and figures.
+
+```{r load-and-join-data}
+# Load necessary libraries
+library(dplyr)
+library(readr)
+
+# Define the folder path
+folder_path <- "~/Documents/NOAA_Storm_Project"
+
+# Define the file paths for the unzipped CSV files
+details_file <- file.path(folder_path, "StormEvents_details-ftp_v1.0_d2025_c20260323.csv")
+fatalities_file <- file.path(folder_path, "StormEvents_fatalities-ftp_v1.0_d2025_c20260323.csv")
+locations_file <- file.path(folder_path, "StormEvents_locations-ftp_v1.0_d2025_c20260323.csv")
+
+# Load the CSV files into R
+details <- read_csv(details_file)
+fatalities <- read_csv(fatalities_file)
+locations <- read_csv(locations_file)
+
+# Join the datasets by EVENT_ID
+joined_data <- details %>%
+  left_join(locations, by = "EVENT_ID") %>%
+  left_join(fatalities, by = "EVENT_ID")
+
+# Save the joined data to a new CSV file
+output_file <- file.path(folder_path, "StormEvents_joined_data.csv")
+write_csv(joined_data, output_file)
+
+# Inform the user
+message("Joined data saved to: ", output_file)
+
+# Optional: View the first few rows of the joined data
+print(head(joined_data))
+```
+
+### Data Cleaning
+
+After joining the three NOAA files, I cleaned the data so it would be easier to use for the analysis questions. The joined dataset has many columns, and not all of them are needed for this project. I kept the main variables related to the event ID, state, event type, month, dates, injuries, deaths, and damages.
+
+Since the locations and fatalities files can contain more than one record for the same storm event, joining the files can create repeated rows for the same `EVENT_ID`. To keep the analysis at the storm-event level, I kept one row per `EVENT_ID` before creating summary variables. This helps avoid double-counting storm events when calculating totals by event type, state, and month.
+
+I also created new variables for the analysis. The `total_fatalities` variable combines direct and indirect deaths. The `total_injuries` variable combines direct and indirect injuries. The `health_impact` variable adds total fatalities and total injuries together. I created this variable because the first project question asks which event types are most harmful with respect to population health.
+
+The main variables used in the cleaned dataset are:
+
+- `EVENT_ID`: unique identifier for each storm event.
+- `STATE`: state where the storm event was recorded.
+- `EVENT_TYPE`: type of storm event.
+- `month`: month when the storm event occurred.
+- `BEGIN_DATE_TIME`: date and time when the event began.
+- `END_DATE_TIME`: date and time when the event ended.
+- `INJURIES_DIRECT`: injuries directly caused by the event.
+- `INJURIES_INDIRECT`: injuries indirectly connected to the event.
+- `DEATHS_DIRECT`: deaths directly caused by the event.
+- `DEATHS_INDIRECT`: deaths indirectly connected to the event.
+- `total_fatalities`: direct and indirect deaths combined.
+- `total_injuries`: direct and indirect injuries combined.
+- `health_impact`: total fatalities and total injuries combined.
+- `DAMAGE_PROPERTY`: reported property damage.
+- `DAMAGE_CROPS`: reported crop damage.
+
+```{r clean-data}
+# Load necessary libraries
+library(dplyr)
+
+# Use one row per EVENT_ID and keep only the variables needed for analysis
+storm_clean <- joined_data %>%
+  distinct(EVENT_ID, .keep_all = TRUE) %>%
+  mutate(
+    total_fatalities = DEATHS_DIRECT + DEATHS_INDIRECT,
+    total_injuries = INJURIES_DIRECT + INJURIES_INDIRECT,
+    health_impact = total_fatalities + total_injuries,
+    month = MONTH_NAME
+  ) %>%
+  select(
+    EVENT_ID,
+    STATE,
+    EVENT_TYPE,
+    month,
+    BEGIN_DATE_TIME,
+    END_DATE_TIME,
+    INJURIES_DIRECT,
+    INJURIES_INDIRECT,
+    DEATHS_DIRECT,
+    DEATHS_INDIRECT,
+    total_fatalities,
+    total_injuries,
+    health_impact,
+    DAMAGE_PROPERTY,
+    DAMAGE_CROPS
+  )
+
+# View the cleaned data
+head(storm_clean)
+```
+
+Before presenting the results, it is important to note that this report is not making specific policy recommendations. Instead, the goal is to summarize patterns in the NOAA Storm Events data in a way that could help a government or municipal manager better understand severe weather risks. The results focus on population health impact, event frequency, state-level patterns, and monthly patterns.
+
+## Results
+
+### Question 1: Across the United States, which types of events (as indicated in the EVENT_TYPE variable) are most harmful with respect to population health?
+
+To answer this question, I grouped the cleaned storm data by `EVENT_TYPE`. Then I calculated the total fatalities, total injuries, and total health impact for each event type. I used `health_impact` as the main measure because it combines both fatalities and injuries. This gives a better picture of population health harm than looking at only deaths or only injuries.
+
+```{r question-1-table}
+# Load necessary library
+library(dplyr)
+
+# Group the cleaned dataset by storm event type.
+# This lets me compare the human impact of each type of weather event.
+health_by_event <- storm_clean %>%
+  group_by(EVENT_TYPE) %>%
+  
+  # For each event type, calculate the total number of fatalities,
+  # total number of injuries, and the combined health impact.
+  summarize(
+    total_fatalities = sum(total_fatalities, na.rm = TRUE),
+    total_injuries = sum(total_injuries, na.rm = TRUE),
+    total_health_impact = sum(health_impact, na.rm = TRUE),
+    .groups = "drop"
+  ) %>%
+  
+  # Arrange the event types from most harmful to least harmful.
+  arrange(desc(total_health_impact))
+
+# Display the top 10 event types with the highest population health impact.
+head(health_by_event, 10)
+```
+
+The table above shows the top storm event types based on total population health impact. In this project, population health impact means fatalities and injuries combined. This table helps identify which event types caused the most harm to people in 2025.
+
+```{r question-1-plot, fig.cap="Figure 1. Top 10 storm event types by total population health impact in 2025."}
+# Load necessary libraries
+library(dplyr)
+library(ggplot2)
+
+# Create a bar chart for the top 10 event types by total health impact.
+# The graph makes it easier to compare the event types visually.
+health_by_event %>%
+  
+  # Keep only the 10 event types with the highest total health impact.
+  slice_max(total_health_impact, n = 10) %>%
+  
+  # Put EVENT_TYPE on the x-axis and total_health_impact on the y-axis.
+  # reorder() sorts the bars so the largest values are easier to see.
+  ggplot(aes(x = reorder(EVENT_TYPE, total_health_impact), 
+             y = total_health_impact)) +
+  
+  # Create the bars for the chart.
+  geom_col() +
+  
+  # Flip the chart so event names are easier to read.
+  coord_flip() +
+  
+  # Add a clear title and axis labels.
+  labs(
+    title = "Most Harmful Storm Event Types by Population Health Impact",
+    x = "Event Type",
+    y = "Total Fatalities and Injuries"
+  )
+```
+
+Figure 1 shows the ten event types with the highest total population health impact. The horizontal bar chart makes it easier to compare event types because some event names are long. A longer bar means that the event type caused more total injuries and fatalities. This figure is useful because it focuses on human impact rather than just the number of times an event occurred. For example, an event type may not happen the most often, but it can still be one of the most harmful if it causes many injuries or deaths.
+
+### Question 2: Across the United States, which types of events are most happening in which states?
+
+To answer this question, I grouped the cleaned data by `STATE` and `EVENT_TYPE`. Then I counted how many times each event type happened in each state. This helps show the most common storm event type for each state. I used event counts for this question because the question is asking where event types are happening most often, not which ones caused the most damage or injuries.
+
+```{r question-2-table}
+# Load necessary library
+library(dplyr)
+
+# Count how many times each event type occurred in each state.
+# Grouping by both STATE and EVENT_TYPE allows me to compare
+# storm event patterns across different states.
+events_by_state <- storm_clean %>%
+  group_by(STATE, EVENT_TYPE) %>%
+  
+  # Count the number of records for each state and event type combination.
+  summarize(
+    event_count = n(),
+    .groups = "drop"
+  ) %>%
+  
+  # Sort the results so the largest counts appear first.
+  arrange(desc(event_count))
+
+# For each state, keep the event type that happened the most often.
+top_event_by_state <- events_by_state %>%
+  group_by(STATE) %>%
+  
+  # This keeps only the most common event type in each state.
+  # with_ties = FALSE keeps one event type if there is a tie.
+  slice_max(event_count, n = 1, with_ties = FALSE) %>%
+  ungroup() %>%
+  arrange(STATE)
+
+# Display the most common storm event type for the first 15 states.
+head(top_event_by_state, 15)
+```
+
+The table above shows the most common storm event type for each state. Each row gives the state, the event type that occurred most often, and the number of times that event type was recorded. This table is useful because it shows that storm patterns are not the same everywhere. Some states may experience more wind-related events, while others may have more flood, winter, or heat-related events.
+
+```{r question-2-plot, fig.cap="Figure 2. Top 10 states by total number of recorded storm events in 2025."}
+# Load necessary libraries
+library(dplyr)
+library(ggplot2)
+
+# Count the total number of storm events recorded in each state.
+state_event_counts <- storm_clean %>%
+  group_by(STATE) %>%
+  summarize(
+    total_events = n(),
+    .groups = "drop"
+  ) %>%
+  
+  # Sort states from highest number of events to lowest.
+  arrange(desc(total_events))
+
+# Create a bar chart of the top 10 states with the most recorded storm events.
+state_event_counts %>%
+  
+  # Keep only the 10 states with the highest number of storm events.
+  slice_max(total_events, n = 10) %>%
+  
+  # Put STATE on the x-axis and total_events on the y-axis.
+  # reorder() sorts the states by total event count.
+  ggplot(aes(x = reorder(STATE, total_events), 
+             y = total_events)) +
+  
+  # Create the bars for the chart.
+  geom_col() +
+  
+  # Flip the chart so state names are easier to read.
+  coord_flip() +
+  
+  # Add a clear title and axis labels.
+  labs(
+    title = "Top 10 States by Number of Storm Events",
+    x = "State",
+    y = "Number of Recorded Events"
+  )
+```
+
+Figure 2 shows the ten states with the highest number of recorded storm events in 2025. A longer bar means that the state had more storm events in the NOAA dataset. This figure helps show where storm activity was recorded most often across the United States. It does not show which states had the most deaths or injuries, but it helps answer the question of where storm events happened most frequently.
+
+### Question 3: Which types of events are characterized by which months?
+
+To answer this question, I grouped the cleaned data by `month` and `EVENT_TYPE`. Then I counted how many times each event type happened in each month. This helps show whether certain storm event types were more common during specific months of 2025.
+
+```{r question-3-table}
+# Load necessary library
+library(dplyr)
+
+# Count how many times each event type occurred in each month.
+# Grouping by month and EVENT_TYPE helps show seasonal patterns in the data.
+events_by_month <- storm_clean %>%
+  group_by(month, EVENT_TYPE) %>%
+  
+  # Count the number of storm events for each month and event type combination.
+  summarize(
+    event_count = n(),
+    .groups = "drop"
+  ) %>%
+  
+  # Sort the table by month and then by the highest event count.
+  arrange(month, desc(event_count))
+
+# For each month, keep the event type that happened the most often.
+top_event_by_month <- events_by_month %>%
+  group_by(month) %>%
+  
+  # This keeps the most common event type for each month.
+  # with_ties = FALSE keeps one event type if there is a tie.
+  slice_max(event_count, n = 1, with_ties = FALSE) %>%
+  ungroup()
+
+# Display the most common storm event type for each month.
+top_event_by_month
+```
+
+The table above shows the most common storm event type for each month. Each row gives the month, the event type that occurred most often during that month, and the number of times it was recorded. This helps identify monthly patterns in storm activity.
+
+```{r question-3-plot, fig.cap="Figure 3. Number of recorded storm events by month for the five most common event types in 2025."}
+# Load necessary libraries
+library(dplyr)
+library(ggplot2)
+
+# Find the five most common event types overall.
+# Using the top five keeps the graph readable and avoids too many categories.
+top_five_events <- storm_clean %>%
+  count(EVENT_TYPE, sort = TRUE) %>%
+  slice_max(n, n = 5) %>%
+  pull(EVENT_TYPE)
+
+# Create a dataset that only includes the five most common event types.
+monthly_top_events <- storm_clean %>%
+  filter(EVENT_TYPE %in% top_five_events) %>%
+  group_by(month, EVENT_TYPE) %>%
+  summarize(
+    event_count = n(),
+    .groups = "drop"
+  )
+
+# Create a grouped bar chart showing how the top event types vary by month.
+monthly_top_events %>%
+  ggplot(aes(x = month, y = event_count, fill = EVENT_TYPE)) +
+  
+  # Use side-by-side bars so each event type can be compared within each month.
+  geom_col(position = "dodge") +
+  
+  # Add clear labels and a title.
+  labs(
+    title = "Common Storm Event Types by Month",
+    x = "Month",
+    y = "Number of Recorded Events",
+    fill = "Event Type"
+  ) +
+  
+  # Rotate the month labels so they are easier to read.
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+```
+
+Figure 3 shows how the five most common storm event types were distributed across the months of 2025. The grouped bars make it easier to compare event types within the same month. This figure is useful because some storm events may be more seasonal than others. For example, some events may appear more often in warmer months, while winter-related events may appear more often in colder months. This helps show that storm activity changes throughout the year instead of staying the same every month.
+
+### Question 4: Which states had the highest total population health impact from storm events in 2025?
+
+For my own question, I wanted to look at which states had the highest total population health impact from storm events. This is interesting because a state may have many storm events, but that does not always mean it had the most injuries or deaths. To answer this question, I grouped the data by `STATE` and calculated the total fatalities, total injuries, and total health impact for each state.
+
+```{r question-4-table}
+# Load necessary library
+library(dplyr)
+
+# Group the cleaned dataset by state.
+# This helps compare the human impact of storm events across states.
+health_by_state <- storm_clean %>%
+  group_by(STATE) %>%
+  
+  # For each state, calculate total fatalities, total injuries,
+  # and the combined population health impact.
+  summarize(
+    total_fatalities = sum(total_fatalities, na.rm = TRUE),
+    total_injuries = sum(total_injuries, na.rm = TRUE),
+    total_health_impact = sum(health_impact, na.rm = TRUE),
+    .groups = "drop"
+  ) %>%
+  
+  # Arrange states from highest to lowest health impact.
+  arrange(desc(total_health_impact))
+
+# Display the top 10 states with the highest health impact.
+head(health_by_state, 10)
+```
+
+The table above shows the states with the highest total population health impact from storm events in 2025. This table is useful because it focuses on the human impact of storms, not just the number of storms reported. It helps show which states experienced the most serious outcomes in terms of deaths and injuries.
+
+```{r question-4-plot, fig.cap="Figure 4. Top 10 states by total population health impact from storm events in 2025."}
+# Load necessary libraries
+library(dplyr)
+library(ggplot2)
+
+# Create a bar chart showing the top 10 states by health impact.
+health_by_state %>%
+  
+  # Keep only the 10 states with the highest total health impact.
+  slice_max(total_health_impact, n = 10) %>%
+  
+  # Put STATE on the x-axis and total_health_impact on the y-axis.
+  # reorder() sorts the bars by health impact.
+  ggplot(aes(x = reorder(STATE, total_health_impact),
+             y = total_health_impact)) +
+  
+  # Create the bars for the chart.
+  geom_col() +
+  
+  # Flip the chart so state names are easier to read.
+  coord_flip() +
+  
+  # Add a clear title and axis labels.
+  labs(
+    title = "Top 10 States by Population Health Impact",
+    x = "State",
+    y = "Total Fatalities and Injuries"
+  )
+```
+
+Figure 4 shows the ten states with the highest total population health impact from storm events in 2025. A longer bar means that the state had more combined fatalities and injuries. This figure is important because it shows that storm risk can be measured in different ways. A state might have many storm events, but another state may have fewer events that caused more serious harm to people. This makes the analysis more useful for understanding where storm events had the greatest human impact.
+
+## Limitations
+
+There are a few limitations to this analysis. First, this report only uses the 2025 NOAA Storm Events data, so it does not show long-term trends across multiple years. Second, the data depends on reported and recorded storm events, so some events may be missing or reported differently across states. Third, the analysis keeps one row per `EVENT_ID` to avoid double-counting after the files are joined. This makes the event-level summaries clearer, but it may leave out some detailed location-level or fatality-level information. Because of these limitations, the results should be understood as a summary of recorded 2025 storm events rather than a complete picture of all possible severe weather risks.
+
+## Conclusion
+
+This analysis used the 2025 NOAA Storm Events database to study severe weather patterns across the United States. The results show which event types had the greatest population health impact, which event types were most common in different states, and how storm events varied by month. I also examined which states had the highest total population health impact from storm events.
+
+These findings may be useful for a government or municipal manager who needs to understand severe weather risks and think about how different types of events affect communities. The report does not make specific recommendations, but it shows patterns that could support future planning, preparedness discussions, and resource prioritization.
+
+## References
+
+National Centers for Environmental Information. (2026). *Storm Events Database CSV Files*. National Oceanic and Atmospheric Administration.  
+https://www.ncei.noaa.gov/pub/data/swdi/stormevents/csvfiles/
+
+National Centers for Environmental Information. (n.d.). *Storm Events Database Documentation*. National Oceanic and Atmospheric Administration.  
+https://www.ncdc.noaa.gov/stormevents/ftp.jsp
+
+National Centers for Environmental Information. (n.d.). *Storm Data Bulk CSV Format Documentation*. National Oceanic and Atmospheric Administration.  
+https://www.ncei.noaa.gov/pub/data/swdi/stormevents/csvfiles/Storm-Data-Bulk-csv-Format.pdf
