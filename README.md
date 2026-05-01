@@ -285,32 +285,52 @@ This project is designed to be reproducible. Another user should be able to recr
 
 To reproduce the project:
 
-1. Download the same three NOAA CSV files.
+1. Download the same three NOAA CSV files:
+
+   - `StormEvents_details-ftp_v1.0_d2025_c20260323.csv`
+   - `StormEvents_fatalities-ftp_v1.0_d2025_c20260323.csv`
+   - `StormEvents_locations-ftp_v1.0_d2025_c20260323.csv`
+
 2. Place the files in the `NOAA_Storm_Project` folder.
+
 3. Open `NOAA_Storm_Project.Rproj` in RStudio.
+
 4. Open `NOAA_Storm_Project.Rmd`.
-5. Check that the folder path matches the project folder location.
-6. Install the required R packages if needed.
-7. Click **Knit** to create the HTML report.
 
-The project should be run from the RStudio project folder so the file paths work correctly. If the folder is saved in a different location, update `folder_path` in both the `.Rmd` and `.R` files.
+5. Check that the folder path matches the project folder location:
 
-No data was manually edited outside of R. The raw files are loaded, joined, cleaned, summarized, and visualized using R code.
+   ```r
+   folder_path <- "~/Documents/NOAA_Storm_Project"
+
+If the folder is saved in a different location, update folder_path in both the .Rmd and .R files.
+
+Install the required R packages if needed:
+
+install.packages("dplyr")
+install.packages("readr")
+install.packages("ggplot2")
+Click Knit to create the HTML report.
+
+The joined dataset will be recreated automatically as:
+
+StormEvents_joined_data.csv
+
+The project should be run from the RStudio project folder so the file paths work correctly. No data was manually edited outside of R. The raw files are loaded, joined, cleaned, summarized, and visualized using R code.
 
 ## Output
 
 The main intermediate output is:
 
-* `StormEvents_joined_data.csv`: intermediate joined dataset created from the three raw NOAA files. This file is not uploaded to GitHub because of file size, but it is recreated automatically when the R Markdown file or R script is run.
+- `StormEvents_joined_data.csv`: intermediate joined dataset created from the three raw NOAA files. This file is not uploaded to GitHub because of file size, but it is recreated automatically when the R Markdown file or R script is run.
 
 The final outputs are:
 
-* `NOAA_Storm_Project.html`: knitted HTML version of the final report.
-* `NOAA_Storm_Project.Rmd`: R Markdown report with code, explanations, tables, and figures.
-* `NOAA_Storm_Project.R`: code-only R script for the analysis.
-* `README.md`: project documentation explaining the workflow, files, variables, and reproducibility steps.
-* RPubs URL: public link to the published HTML report.
-* GitHub repository URL: repository containing the project files and documentation.
+- `NOAA_Storm_Project.html`: knitted HTML version of the final report.
+- `NOAA_Storm_Project.Rmd`: R Markdown report with code, explanations, tables, and figures.
+- `NOAA_Storm_Project.R`: code-only R script for the analysis.
+- `README.md`: project documentation explaining the workflow, files, variables, and reproducibility steps.
+- `RPubs URL`: public link to the published HTML report.
+- `GitHub repository URL`: repository containing the project files and documentation.
 
 Files not uploaded to GitHub because of size can be recreated or downloaded using the steps in this README. The raw NOAA CSV files can be downloaded from the NOAA Storm Events CSV file page, and the joined dataset can be recreated by running the R Markdown file or R script.
 
