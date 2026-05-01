@@ -75,21 +75,25 @@ The project folder contains the following files:
 
   * The raw NOAA details file.
   * Contains the main information about each storm event, such as event type, state, dates, deaths, injuries, and damage fields.
+  * This file may not be uploaded to GitHub if it exceeds GitHub’s file-size limits. It can be downloaded from the NOAA Storm Events CSV file page.
 
 * `StormEvents_fatalities-ftp_v1.0_d2025_c20260323.csv`
 
   * The raw NOAA fatalities file.
   * Contains additional fatality-related information connected to storm events.
+  * This file may not be uploaded to GitHub if it exceeds GitHub’s file-size limits. It can be downloaded from the NOAA Storm Events CSV file page.
 
 * `StormEvents_locations-ftp_v1.0_d2025_c20260323.csv`
 
   * The raw NOAA locations file.
   * Contains geographic and location-related information for storm events.
+  * This file may not be uploaded to GitHub if it exceeds GitHub’s file-size limits. It can be downloaded from the NOAA Storm Events CSV file page.
 
 * `StormEvents_joined_data.csv`
 
   * The joined dataset created from the three raw NOAA files.
-  * This file is created by joining the raw files using `EVENT_ID`.
+  * This file is not uploaded to GitHub because it is large.
+  * It can be recreated by running `NOAA_Storm_Project.Rmd` or `NOAA_Storm_Project.R`.
 
 * `README.md`
 
@@ -297,15 +301,18 @@ No data was manually edited outside of R. The raw files are loaded, joined, clea
 
 The main intermediate output is:
 
-* `StormEvents_joined_data.csv`: intermediate joined dataset created from the three raw NOAA files.
+* `StormEvents_joined_data.csv`: intermediate joined dataset created from the three raw NOAA files. This file is not uploaded to GitHub because of file size, but it is recreated automatically when the R Markdown file or R script is run.
 
 The final outputs are:
 
 * `NOAA_Storm_Project.html`: knitted HTML version of the final report.
 * `NOAA_Storm_Project.Rmd`: R Markdown report with code, explanations, tables, and figures.
 * `NOAA_Storm_Project.R`: code-only R script for the analysis.
+* `README.md`: project documentation explaining the workflow, files, variables, and reproducibility steps.
 * RPubs URL: public link to the published HTML report.
 * GitHub repository URL: repository containing the project files and documentation.
+
+Files not uploaded to GitHub because of size can be recreated or downloaded using the steps in this README. The raw NOAA CSV files can be downloaded from the NOAA Storm Events CSV file page, and the joined dataset can be recreated by running the R Markdown file or R script.
 
 ## Limitations
 
