@@ -321,8 +321,9 @@ Due to these limitations, the results should be understood as a summary of recor
 
 ## RPubs Link
 
-```text
 RPubs URL:
+```text
+https://rpubs.com/Anshi0304/NOAA-Storm-Events-Analysis
 ```
 
 ## GitHub Repository
