@@ -30,19 +30,13 @@ The data comes from the NOAA Storm Events database. Three raw CSV files were use
 
 The files were downloaded from the NOAA Storm Events CSV file page:
 
-```text
 https://www.ncei.noaa.gov/pub/data/swdi/stormevents/csvfiles/
-````
 
 NOAA documentation was also used to understand how the files are structured and how variables are defined:
 
-```text
 https://www.ncdc.noaa.gov/stormevents/ftp.jsp
-```
 
-```text
 https://www.ncei.noaa.gov/pub/data/swdi/stormevents/csvfiles/Storm-Data-Bulk-csv-Format.pdf
-```
 
 ## Research Questions
 
@@ -295,21 +289,23 @@ To reproduce the project:
 6. Install the required R packages if needed.
 7. Click **Knit** to create the HTML report.
 
+The project should be run from the RStudio project folder so the file paths work correctly. If the folder is saved in a different location, update `folder_path` in both the `.Rmd` and `.R` files.
+
 No data was manually edited outside of R. The raw files are loaded, joined, cleaned, summarized, and visualized using R code.
 
 ## Output
 
 The main intermediate output is:
 
-* `StormEvents_joined_data.csv`
+* `StormEvents_joined_data.csv`: intermediate joined dataset created from the three raw NOAA files.
 
 The final outputs are:
 
-* `NOAA_Storm_Project.html`
-* `NOAA_Storm_Project.Rmd`
-* `NOAA_Storm_Project.R`
-* RPubs URL
-* GitHub repository URL
+* `NOAA_Storm_Project.html`: knitted HTML version of the final report.
+* `NOAA_Storm_Project.Rmd`: R Markdown report with code, explanations, tables, and figures.
+* `NOAA_Storm_Project.R`: code-only R script for the analysis.
+* RPubs URL: public link to the published HTML report.
+* GitHub repository URL: repository containing the project files and documentation.
 
 ## Limitations
 
