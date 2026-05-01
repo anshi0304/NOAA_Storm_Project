@@ -317,11 +317,9 @@ Second, the data depends on recorded and reported storm events. Some events may 
 
 Third, the cleaned dataset keeps one row per `EVENT_ID` to avoid double-counting after the files are joined. This makes the event-level summaries clearer, but it may leave out some detailed location-level or fatality-level information.
 
-Because of these limitations, the results should be understood as a summary of recorded 2025 storm events rather than a complete picture of all severe weather risks.
+Due to these limitations, the results should be understood as a summary of recorded 2025 storm events rather than a complete picture of all severe weather risks.
 
 ## RPubs Link
-
-Add your RPubs link here after publishing:
 
 ```text
 RPubs URL:
@@ -329,10 +327,9 @@ RPubs URL:
 
 ## GitHub Repository
 
-Add your GitHub repository link here: 
-
+GitHub Repository URL:
 ```text
-GitHub Repository URL: https://github.com/anshi0304/NOAA_Storm_Project.git
+https://github.com/anshi0304/NOAA_Storm_Project.git
 ```
 
 ## Author
