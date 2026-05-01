@@ -329,7 +329,7 @@ RPubs URL:
 
 ## GitHub Repository
 
-Add your GitHub repository link here:
+Add your GitHub repository link here: https://github.com/anshi0304/NOAA_Storm_Project.git
 
 ```text
 GitHub Repository URL:
